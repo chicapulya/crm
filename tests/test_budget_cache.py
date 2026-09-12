@@ -4,19 +4,15 @@ Key invariant: two identical google_call invocations produce exactly ONE
 budget increment and ONE HTTP request (second hit comes from cache).
 """
 from __future__ import annotations
+
 import asyncio
 import sqlite3
-import sys
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-import cache as cache_mod
-import budget as budget_mod
-from budget import (
+from places_census.api import budget as budget_mod
+from places_census.api.budget import (
     FREE_LIMITS,
     BudgetExhausted,
     _check_and_increment,
@@ -24,6 +20,7 @@ from budget import (
     get_usage,
     google_call,
 )
+from places_census.storage import cache as cache_mod
 
 BUDGET_DDL = """
 CREATE TABLE IF NOT EXISTS budget_ledger (
@@ -39,8 +36,6 @@ def _conn() -> sqlite3.Connection:
     c.executescript(BUDGET_DDL)
     return c
 
-
-# ── SKU detection ────────────────────────────────────────────────────────────
 
 def test_detect_sku_pro_fields_only():
     mask = "places.id,places.displayName,places.location,places.primaryType,places.businessStatus"
@@ -58,8 +53,6 @@ def test_detect_sku_enterprise_phone():
 def test_detect_sku_enterprise_website():
     assert detect_sku("places.id,places.websiteUri,places.displayName") == "enterprise"
 
-
-# ── Budget enforcement ───────────────────────────────────────────────────────
 
 def test_budget_increments_on_first_call():
     conn = _conn()
@@ -99,7 +92,7 @@ def test_budget_counter_unchanged_on_exhausted():
         _check_and_increment(conn, "enterprise")
     except BudgetExhausted:
         pass
-    assert get_usage(conn, "enterprise") == limit  # must NOT have incremented
+    assert get_usage(conn, "enterprise") == limit
 
 
 def test_pro_and_enterprise_counters_independent():
@@ -110,14 +103,7 @@ def test_pro_and_enterprise_counters_independent():
     assert get_usage(conn, "enterprise") == 1
 
 
-# ── Double-call test: cache hit = 0 extra budget increment ───────────────────
-
 def test_double_call_single_budget_increment(tmp_path, monkeypatch):
-    """
-    Two identical google_call() invocations must result in:
-      - exactly 1 HTTP request (second comes from disk cache)
-      - exactly 1 budget increment
-    """
     monkeypatch.setattr(cache_mod, "CACHE_DIR", tmp_path)
 
     conn = _conn()
@@ -151,12 +137,11 @@ def test_double_call_single_budget_increment(tmp_path, monkeypatch):
 
     assert r1 == fake_response
     assert r2 == fake_response
-    assert mock_http.post.call_count == 1, "Expected exactly 1 HTTP call (2nd should be cache hit)"
-    assert get_usage(conn, "pro") == 1, "Expected exactly 1 budget increment"
+    assert mock_http.post.call_count == 1
+    assert get_usage(conn, "pro") == 1
 
 
 def test_different_field_masks_use_separate_cache_entries(tmp_path, monkeypatch):
-    """Different field masks must NOT share a cache entry."""
     monkeypatch.setattr(cache_mod, "CACHE_DIR", tmp_path)
 
     conn = _conn()
@@ -168,11 +153,7 @@ def test_different_field_masks_use_separate_cache_entries(tmp_path, monkeypatch)
     resp_pro = {"places": [{"id": "pro_result"}]}
     resp_ent = {"places": [{"id": "ent_result"}]}
 
-    call_count = 0
-
     async def fake_post(url, **kwargs):
-        nonlocal call_count
-        call_count += 1
         mask = kwargs.get("headers", {}).get("X-Goog-FieldMask", "")
         m = MagicMock()
         m.status_code = 200
@@ -193,4 +174,4 @@ def test_different_field_masks_use_separate_cache_entries(tmp_path, monkeypatch)
 
     assert r1 == resp_pro
     assert r2 == resp_ent
-    assert mock_http.post.call_count == 2  # separate cache keys → 2 HTTP calls
+    assert mock_http.post.call_count == 2

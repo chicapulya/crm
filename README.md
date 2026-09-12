@@ -1,11 +1,38 @@
 # Перепись заведений Кишинёва — Google Places API (New)
 
+CLI и пайплайн для сбора, обогащения и экспорта данных о заведениях Кишинёва через Google Places API.
+
 ## Установка
 
 ```bash
-pip install -r requirements.txt
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # Linux / macOS
+
+pip install -e ".[dev]"
 cp .env.example .env
 # вставь в .env свой ключ Google Places API (New)
+```
+
+## Запуск CLI
+
+```bash
+places-census scout
+places-census estimate
+places-census run --categories food --max-calls 200 --dry-run
+places-census run --categories food --max-calls 200
+places-census run --max-calls 5000
+places-census run --categories beauty,food,health
+places-census run --include-suburbs
+places-census run --resume
+places-census report
+```
+
+Эквивалент через модуль:
+
+```bash
+python -m places_census scout
+python -m places_census run --max-calls 5000
 ```
 
 ## Этапы запуска
@@ -13,7 +40,7 @@ cp .env.example .env
 ### Этап 1 — Разведка (обязательно перед остальным)
 
 ```bash
-python main.py scout
+places-census scout
 ```
 
 Делает один запрос по центру Кишинёва (cafe, r=500м), печатает сырой JSON.
@@ -22,92 +49,138 @@ python main.py scout
 ### Оценка бюджета
 
 ```bash
-python main.py estimate
+places-census estimate
 ```
 
 Считает количество ячеек сетки и типов, выдаёт ожидаемое число вызовов.
 
-> **Важно:** при 36 типах и `START_RADIUS=700` базовая оценка ~13 000 вызовов —  
-> это больше 5 000 бесплатных Pro-вызовов в месяц (~$256 сверх лимита).  
+> **Важно:** при 36 типах и `START_RADIUS=1800` базовая оценка зависит от сетки —  
+> это может превысить 5 000 бесплатных Pro-вызовов в месяц.  
 > Варианты укладки в бюджет:
 > - Запускать по 1–2 вертикали в месяц: `--categories beauty`  
-> - Увеличить `START_RADIUS` в `config.py` до 1 200–1 500 м (меньше ячеек)  
-> - Сократить список типов в `categories.yaml`  
-> - Прогнать всё сразу с пониманием, что потратишь ~$250
+> - Увеличить `START_RADIUS` в `src/places_census/config.py`  
+> - Сократить список типов в `data/categories.yaml`  
+> - Прогнать всё сразу с пониманием стоимости сверх лимита
 
 ### Этап 2 — Тест на двух категориях
 
 ```bash
-python main.py run --categories food --max-calls 200 --dry-run
-python main.py run --categories food --max-calls 200
+places-census run --categories food --max-calls 200 --dry-run
+places-census run --categories food --max-calls 200
 ```
-
-Посмотри на фактическое число вызовов и насыщенных ячеек, прежде чем запускать всё.
 
 ### Полный прогон
 
 ```bash
-python main.py run --max-calls 5000
-```
-
-С ограничением по категориям:
-
-```bash
-python main.py run --categories beauty,food,health
-```
-
-С пригородами:
-
-```bash
-python main.py run --include-suburbs
-```
-
-Продолжить прерванный прогон:
-
-```bash
-python main.py run --resume
+places-census run --max-calls 5000
+places-census run --categories beauty,food,health
+places-census run --include-suburbs
+places-census run --resume
 ```
 
 ### Отчёт и CSV
 
 ```bash
-python main.py report
+places-census report
 ```
 
-Генерирует `report.md` и `places.csv` из текущей базы.
+Генерирует `var/report.md` и `var/places.csv` из текущей базы.
 
 ## Структура проекта
 
 ```
-.
-├── main.py           # CLI
-├── census.py         # Основной алгоритм сбора (адаптивная сетка)
-├── client.py         # HTTP-клиент с кэшем, ретраями, backoff
-├── geometry.py       # Генератор сетки, дробление ячеек, сектора
-├── db.py             # SQLite: схема, upsert, дедупликация
-├── cache.py          # Кэш ответов на диске (SHA-256 ключ)
-├── report.py         # Экспорт CSV + Markdown-отчёт
-├── config.py         # Все константы и пути
-├── categories.yaml   # Вертикали и типы мест
+crm/
+├── README.md
+├── pyproject.toml              # packaging, entry points, pytest config
+├── requirements.txt            # pinned deps (mirrors pyproject.toml)
+├── .env.example
+├── .gitignore
+│
+├── data/                       # статические конфиги (в git)
+│   ├── categories.yaml         # вертикали и типы мест для сбора
+│   ├── taxonomy.yaml           # primaryType → vertical
+│   └── osm_sectors.json        # seed-данные секторов OSM
+│
+├── src/
+│   └── places_census/          # основной пакет
+│       ├── __init__.py
+│       ├── __main__.py         # python -m places_census
+│       ├── cli.py              # Click CLI (scout, run, report, estimate)
+│       ├── config.py           # константы, пути, API-настройки
+│       │
+│       ├── api/                # Google Places API
+│       │   ├── client.py       # Nearby Search клиент
+│       │   └── budget.py       # бюджет, кэш-aware google_call
+│       │
+│       ├── census/             # алгоритм сбора
+│       │   ├── runner.py       # адаптивная сетка, Census
+│       │   └── geometry.py     # генератор сетки, дробление ячеек
+│       │
+│       ├── storage/            # персистентность
+│       │   ├── db.py           # SQLite: схема, upsert, дедуп
+│       │   └── cache.py        # дисковый кэш ответов API
+│       │
+│       ├── export/             # отчёты и выгрузки
+│       │   ├── report.py       # CSV + Markdown-отчёт
+│       │   ├── leads.py        # leads_main.csv, leads_interviews.csv
+│       │   ├── xlsx.py         # chisinau_leads_v2.xlsx
+│       │   └── simple.py       # leads.xlsx
+│       │
+│       ├── processing/         # пост-обработка данных
+│       │   ├── normalize.py    # vertical из taxonomy.yaml
+│       │   ├── product_fit.py  # appointment / booking / orders_menu
+│       │   ├── dedup.py        # geo + name deduplication
+│       │   ├── enrich.py       # Enterprise Place Details
+│       │   └── text_norm.py    # нормализация названий
+│       │
+│       └── scripts/            # утилиты (python -m places_census.scripts.<name>)
+│           ├── check_auto.py
+│           ├── crawl.py
+│           ├── fix_sku.py
+│           ├── osm.py
+│           └── query_usage.py
+│
 ├── tests/
-│   ├── test_geometry.py   # Сетка, дробление ячеек, сектора
-│   └── test_dedup.py      # Дедупликация по place_id
-└── cache/            # Создаётся автоматически
+│   ├── conftest.py
+│   ├── test_geometry.py
+│   ├── test_dedup.py
+│   └── test_budget_cache.py
+│
+└── var/                        # runtime-артефакты (gitignored)
+    ├── cache/                  # кэш ответов API
+    ├── places.db
+    ├── places.csv
+    ├── report.md
+    ├── api_calls.jsonl
+    └── …                       # osm_cache.json, leads_*.csv, *.xlsx
+```
+
+## Вспомогательные скрипты
+
+```bash
+python -m places_census.processing.normalize
+python -m places_census.processing.product_fit
+python -m places_census.processing.dedup
+python -m places_census.processing.enrich --show-budget
+python -m places_census.scripts.osm
+python -m places_census.scripts.crawl --show-stats
+python -m places_census.export.leads
 ```
 
 ## Тесты
 
 ```bash
-pip install pytest
+pytest
+# или
 python -m pytest tests/ -v
 ```
 
 ## Алгоритм (кратко)
 
-1. Bbox города разбивается на круги с шагом `START_RADIUS * 1.4` (~30% перекрытие).
-2. Каждый тип запрашивается отдельно (1 тип = 1 `includedTypes`, чтобы не взрывать лимит).
+1. Bbox города разбивается на круги с шагом `START_RADIUS * GRID_OVERLAP` (~30% перекрытие).
+2. Каждый тип запрашивается отдельно (1 тип = 1 `includedTypes`).
 3. Если ответ = 20 (потолок API), ячейка дробится на 4 подячейки с радиусом `/2` — рекурсивно.
-4. Если дробление дошло до `MIN_RADIUS=120м` и всё ещё 20 результатов — ячейка помечается как насыщенная (честный флаг недосбора в отчёте).
+4. Если дробление дошло до `MIN_RADIUS` и всё ещё 20 результатов — ячейка помечается как насыщенная.
 5. Каждый ответ кэшируется до обработки. Перезапуск продолжает с кэша.
 
 ## Ограничения (политика Google)
@@ -120,4 +193,4 @@ python -m pytest tests/ -v
 
 `id, displayName, formattedAddress, location, types, primaryType, businessStatus, googleMapsUri`
 
-Рейтинги, телефоны, часы работы — Enterprise SKU, не запрашиваются в этой итерации.
+Рейтинги, телефоны, часы работы — Enterprise SKU, запрашиваются отдельно через `processing/enrich.py`.

@@ -1,10 +1,6 @@
 import sqlite3
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-import db as db_mod
+from places_census.storage import db as db_mod
 
 
 def _make_place(pid: str, ptype: str = "cafe") -> dict:

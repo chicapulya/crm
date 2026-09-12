@@ -1,0 +1,1 @@
+"""Census collection algorithm."""

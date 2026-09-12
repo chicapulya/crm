@@ -1,20 +1,14 @@
 import math
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from geometry import (
+from places_census.census.geometry import (
     Cell,
     generate_grid,
     metres_to_lat,
     metres_to_lng,
     nearest_sector,
 )
-from config import BBOX, START_RADIUS, GRID_OVERLAP
+from places_census.config import BBOX, GRID_OVERLAP, START_RADIUS
 
-
-# ── Cell splitting ─────────────────────────────────────────────────────────────
 
 def test_cell_split_produces_four_children():
     c = Cell(46.92, 47.09, 28.74, 28.95)
@@ -40,7 +34,6 @@ def test_cell_split_no_overlap():
     children = parent.split_into_4()
     lat_mid = (parent.lat_min + parent.lat_max) / 2
     lng_mid = (parent.lng_min + parent.lng_max) / 2
-    # bottom-left child
     bl = children[0]
     assert bl.lat_max == lat_mid
     assert bl.lng_max == lng_mid
@@ -53,13 +46,7 @@ def test_cell_center():
     assert abs(lng - 28.5) < 1e-9
 
 
-# ── Grid coverage (no holes) ──────────────────────────────────────────────────
-
 def test_grid_no_gaps():
-    """
-    Every point on a regular 0.01-degree sample grid inside the bbox
-    must be within `radius` metres of at least one circle centre.
-    """
     radius = START_RADIUS
     centres = list(generate_grid(BBOX, radius))
 
@@ -90,14 +77,11 @@ def test_grid_generates_centres():
     assert len(centres) > 0
 
 
-# ── Nearest sector ────────────────────────────────────────────────────────────
-
 def test_nearest_sector_centre():
     centroids = {
         "Centru": (47.0228, 28.8350),
         "Botanica": (46.9872, 28.8637),
     }
-    # Exact centroid of Centru → should assign to Centru
     assert nearest_sector(47.0228, 28.8350, centroids) == "Centru"
 
 
