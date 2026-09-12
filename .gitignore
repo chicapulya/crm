@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+cache/
+places.db
+*.jsonl
+*.csv
+report.md
+.venv/
+venv/

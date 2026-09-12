@@ -1,0 +1,205 @@
+# taxonomy.yaml — maps every Google Places primaryType to a business vertical
+# Verticals: beauty, health, food_sitdown, food_quick, fitness, auto, lodging, events, excluded
+# null primaryType → excluded (handled in normalize.py)
+
+beauty:
+  - beauty_salon
+  - hair_salon
+  - nail_salon
+  - barber_shop
+  - spa
+  - massage_spa
+  - massage
+  - sauna
+  - skin_care_clinic
+  - cosmetics_store
+  - beautician
+  - tanning_studio
+  - makeup_artist
+  - wellness_center
+
+health:
+  - doctor
+  - dentist
+  - medical_clinic
+  - dental_clinic
+  - pharmacy
+  - medical_center
+  - medical_lab
+  - hospital
+  - physiotherapist
+  - chiropractor
+  - veterinary_care
+  - health
+
+food_sitdown:
+  - restaurant
+  - bar
+  - cafe
+  - coffee_shop
+  - bistro
+  - pub
+  - brewpub
+  - sports_bar
+  - cocktail_bar
+  - lounge_bar
+  - wine_bar
+  - beer_garden
+  - hookah_bar
+  - bar_and_grill
+  - gastropub
+  - tea_house
+  - family_restaurant
+  - fine_dining_restaurant
+  - dessert_restaurant
+  - breakfast_restaurant
+  - brunch_restaurant
+  - diner
+  - romanian_restaurant
+  - turkish_restaurant
+  - italian_restaurant
+  - european_restaurant
+  - eastern_european_restaurant
+  - asian_restaurant
+  - japanese_restaurant
+  - korean_restaurant
+  - chinese_restaurant
+  - indian_restaurant
+  - north_indian_restaurant
+  - indonesian_restaurant
+  - middle_eastern_restaurant
+  - mediterranean_restaurant
+  - french_restaurant
+  - american_restaurant
+  - western_restaurant
+  - czech_restaurant
+  - greek_restaurant
+  - lebanese_restaurant
+  - israeli_restaurant
+  - mexican_restaurant
+  - colombian_restaurant
+  - ukrainian_restaurant
+  - russian_restaurant
+  - barbecue_restaurant
+  - steak_house
+  - seafood_restaurant
+  - hamburger_restaurant
+  - chicken_restaurant
+  - chicken_wings_restaurant
+  - hot_pot_restaurant
+  - ramen_restaurant
+  - soup_restaurant
+  - irish_pub
+  - brewery
+
+food_quick:
+  - fast_food_restaurant
+  - bakery
+  - pastry_shop
+  - pizza_restaurant
+  - sushi_restaurant
+  - kebab_shop
+  - shawarma_restaurant
+  - meal_takeaway
+  - meal_delivery
+  - pizza_delivery
+  - buffet_restaurant
+  - cafeteria
+  - snack_bar
+  - coffee_stand
+  - dessert_shop
+  - cake_shop
+  - confectionery
+  - ice_cream_shop
+
+fitness:
+  - gym
+  - fitness_center
+  - yoga_studio
+  - sports_club
+  - sports_complex
+  - sports_school
+  - sports_coaching
+  - sports_activity_location
+  - swimming_pool
+
+auto:
+  - car_repair
+  - car_wash
+  - car_dealer
+  - auto_parts_store
+  - tire_shop
+  - gas_station
+  - car_rental
+  - truck_dealer
+  - chauffeur_service
+  - taxi_service
+  - transportation_service
+
+lodging:
+  - hotel
+  - resort_hotel
+  - extended_stay_hotel
+  - bed_and_breakfast
+  - guest_house
+  - hostel
+  - lodging
+
+events:
+  - banquet_hall
+  - event_venue
+  - wedding_venue
+  - convention_center
+  - concert_hall
+  - performing_arts_theater
+  - opera_house
+  - amphitheatre
+  - live_music_venue
+  - stadium
+  - arena
+  - community_center
+  - cultural_center
+  - amusement_center
+  - dance_hall
+  - go_karting_venue
+  - race_course
+  - casino
+
+excluded:
+  - store
+  - service
+  - supermarket
+  - grocery_store
+  - food_store
+  - convenience_store
+  - general_store
+  - market
+  - liquor_store
+  - butcher_shop
+  - pet_store
+  - pet_care
+  - pet_boarding_service
+  - home_goods_store
+  - clothing_store
+  - jewelry_store
+  - gift_shop
+  - building_materials_store
+  - shopping_mall
+  - wholesaler
+  - supplier
+  - manufacturer
+  - corporate_office
+  - real_estate_agency
+  - educational_institution
+  - non_profit_organization
+  - consultant
+  - general_contractor
+  - locksmith
+  - catering_service
+  - laundry
+  - storage
+  - internet_cafe
+  - art_studio
+  - historical_landmark
+  - synagogue
+  - preschool

@@ -1,0 +1,45 @@
+# Only types confirmed valid in Places API (New) Table A for Nearby Search.
+# driving_school, language_school, tutoring_center → INVALID_ARGUMENT (confirmed).
+# massage, tanning_studio, wellness_center, medical_lab, sports_complex → removed (unconfirmed).
+
+beauty:
+  - beauty_salon
+  - hair_salon
+  - nail_salon
+  - barber_shop
+  - spa
+
+health:
+  - dentist
+  - doctor
+  - physiotherapist
+  - veterinary_care
+
+food:
+  - restaurant
+  - cafe
+  - coffee_shop
+  - bar
+  - bakery
+  - fast_food_restaurant
+  - pizza_restaurant
+  - meal_takeaway
+
+fitness:
+  - gym
+  - fitness_center
+  - yoga_studio
+
+auto:
+  - car_repair
+  - car_wash
+  - car_dealer
+
+lodging:
+  - hotel
+  - guest_house
+  - bed_and_breakfast
+
+events:
+  - event_venue
+  - banquet_hall
